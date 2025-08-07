@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ArticleComment extends Model
 {
-    protected $fillable = ['article_id', 'user_id', 'comment', 'url_file'];
+    protected $fillable = ['article_id', 'user_id', 'admin_id', 'comment'];
 
     public function article()
     {
@@ -16,5 +16,10 @@ class ArticleComment extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+
+    public function admin()
+    {
+        return $this->belongsTo(User::class, 'admin_id', 'id');
     }
 }

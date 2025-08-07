@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->onUpdate('cascade')->onDelete('cascade');
             $table->string('name')->nullable();
             $table->string('url')->nullable();
+            $table->string('url_pdf')->nullable();
             $table->timestamps();
         });
     }

@@ -26,50 +26,12 @@ class UserSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
 
-        // Crear usuario abogado
-        User::create([
-            'name' => 'Juan Pérez',
-            'email' => 'juan.perez@ejemplo.com',
-            'password' => Hash::make('password'),
-            'type' => UserType::LAWYER,
-            'status' => UserStatus::ACTIVE,
-            'email_verified_at' => now(),
-        ]);
-
-        // Crear usuario estudiante
-        User::create([
-            'name' => 'María García',
-            'email' => 'maria.garcia@ejemplo.com',
-            'password' => Hash::make('password'),
-            'type' => UserType::STUDENT,
-            'status' => UserStatus::ACTIVE,
-            'email_verified_at' => now(),
-        ]);
-
-        // Crear usuario profesor
-        User::create([
-            'name' => 'Dr. Carlos López',
-            'email' => 'carlos.lopez@ejemplo.com',
-            'password' => Hash::make('password'),
-            'type' => UserType::PROFESSOR,
-            'status' => UserStatus::ACTIVE,
-            'email_verified_at' => now(),
-        ]);
-
-        // Crear usuario investigador
-        User::create([
-            'name' => 'Ana Rodríguez',
-            'email' => 'ana.rodriguez@ejemplo.com',
-            'password' => Hash::make('password'),
-            'type' => UserType::RESEARCHER,
-            'status' => UserStatus::ACTIVE,
-            'email_verified_at' => now(),
-        ]);
-
         // Crear usuario público
         User::create([
-            'name' => 'Pedro Martínez',
-            'email' => 'pedro.martinez@ejemplo.com',
+            'name' => 'Usuario Público',
+            'email' => 'usuario.publico@ejemplo.com',
+            'email_verified_at' => now(),
+            'phone' => '1234567890',
             'password' => Hash::make('password'),
             'type' => UserType::PUBLIC,
             'status' => UserStatus::ACTIVE,
@@ -79,7 +41,7 @@ class UserSeeder extends Seeder
         // Crear usuario inactivo
         User::create([
             'name' => 'Usuario Inactivo',
-            'email' => 'inactivo@ejemplo.com',
+            'email' => 'usuario.inactivo@ejemplo.com',
             'password' => Hash::make('password'),
             'type' => UserType::PUBLIC,
             'status' => UserStatus::INACTIVE,
@@ -89,7 +51,7 @@ class UserSeeder extends Seeder
         // Crear usuario suspendido
         User::create([
             'name' => 'Usuario Suspendido',
-            'email' => 'suspendido@ejemplo.com',
+            'email' => 'usuario.suspendido@ejemplo.com',
             'password' => Hash::make('password'),
             'type' => UserType::PUBLIC,
             'status' => UserStatus::SUSPENDED,

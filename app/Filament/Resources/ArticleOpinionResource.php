@@ -21,11 +21,11 @@ class ArticleOpinionResource extends Resource
     protected static ?string $model = ArticleOpinion::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-left-right';
-    protected static ?string $navigationGroup = 'Leyes y Reglamentos';
-    protected static ?int $navigationSort = 7;
-    protected static ?string $navigationLabel = 'Opiniones';
-    protected static ?string $pluralNavigationLabel = 'Opiniones';
-    protected static ?string $pluralModelLabel = 'Opiniones';
+    protected static ?string $navigationGroup = 'Comentarios';
+    protected static ?int $navigationSort = 1;
+    protected static ?string $navigationLabel = 'Adiciones';
+    protected static ?string $pluralNavigationLabel = 'Adiciones';
+    protected static ?string $pluralModelLabel = 'Adiciones';
 
     public static function form(Form $form): Form
     {

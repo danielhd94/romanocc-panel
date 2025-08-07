@@ -21,8 +21,8 @@ class ArticleResolutionResource extends Resource
     protected static ?string $model = ArticleResolution::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-check';
-    protected static ?string $navigationGroup = 'Leyes y Reglamentos';
-    protected static ?int $navigationSort = 6;
+    protected static ?string $navigationGroup = 'Comentarios';
+    protected static ?int $navigationSort = 2;
     protected static ?string $navigationLabel = 'Resoluciones';
     protected static ?string $pluralNavigationLabel = 'Resoluciones';
     protected static ?string $pluralModelLabel = 'Resoluciones';
@@ -66,20 +66,23 @@ class ArticleResolutionResource extends Resource
                         return $record?->article_id;
                     })
                     ->required()
-                    ->placeholder('Seleccione un artículo')
-                    ->visible(fn (callable $get) => $get('law_id') !== null),
+                    ->placeholder('Seleccione un artículo'),
                 Forms\Components\TextInput::make('name')
                     ->label('Nombre del Archivo de la Resolución')
+                    ->helperText('Nota: Si no se carga un archivo, se usará el enlace de la resolución.')
                     ->maxLength(255)
-                    ->required()
                     ->columnSpanFull(),
+
+                # enlace a la resolucion
+                Forms\Components\TextInput::make('url')
+                    ->label('Enlace a la Resolución')
+                    ->maxLength(255),
+                # archivo de la resolucion
                 Forms\Components\FileUpload::make('url')
                     ->label('Cargar Archivo de la Resolución (pdf, docx, doc)')
                     ->disk('public')
                     ->directory('resolutions')
-                    ->visibility('public')
-                    ->required()
-                    ->columnSpanFull(),
+                    ->visibility('public'),
             ]);
     }
 

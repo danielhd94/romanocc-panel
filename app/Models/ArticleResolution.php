@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ArticleResolution extends Model
 {
-    protected $fillable = ['article_id', 'user_id', 'name', 'url'];
+    protected $fillable = ['article_id', 'user_id', 'name', 'url', 'url_pdf'];
 
     public function article()
     {

@@ -38,7 +38,7 @@ class AdminPanelProvider extends PanelProvider
             ->sidebarCollapsibleOnDesktop()
             ->navigationGroups([
                 'Leyes y Reglamentos',
-                'Artículos y Reglamentos',
+                'Comentarios',
                 'Configuración',
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')

@@ -20,8 +20,8 @@ class ArticleVideoResource extends Resource
     protected static ?string $model = ArticleVideo::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-video-camera';
-    protected static ?string $navigationGroup = 'Artículos y Reglamentos';
-    protected static ?int $navigationSort = 1;
+    protected static ?string $navigationGroup = 'Comentarios';
+    protected static ?int $navigationSort = 4;
     protected static ?string $navigationLabel = 'Videos';
     protected static ?string $pluralNavigationLabel = 'Videos';
     protected static ?string $pluralModelLabel = 'Videos';

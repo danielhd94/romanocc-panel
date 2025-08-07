@@ -16,10 +16,11 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class ArticleCommentResource extends Resource
 {
     protected static ?string $model = ArticleComment::class;
-
+    # ocultar modulo en el panel de admin
+    protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-left';
-    protected static ?string $navigationGroup = 'Artículos y Reglamentos';
-    protected static ?int $navigationSort = 2;
+    protected static ?string $navigationGroup = 'Comentarios';
+    protected static ?int $navigationSort = 3;
     protected static ?string $navigationLabel = 'Comentarios';
     protected static ?string $pluralNavigationLabel = 'Comentarios';
     protected static ?string $pluralModelLabel = 'Comentarios';

@@ -14,7 +14,7 @@ class ListArticleOpinions extends ListRecords
     {
         return [
             Actions\CreateAction::make()
-                ->label('Crear Opinión')
+                ->label('Crear Adición')
                 ->icon('heroicon-o-plus'),
         ];
     }

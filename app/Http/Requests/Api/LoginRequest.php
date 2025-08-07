@@ -3,6 +3,8 @@
 namespace App\Http\Requests\Api;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Contracts\Validation\Validator;
 
 class LoginRequest extends FormRequest
 {
@@ -40,5 +42,24 @@ class LoginRequest extends FormRequest
             'password.required' => 'La contraseña es requerida.',
             'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
         ];
+    }
+
+    /**
+     * Handle a failed validation attempt.
+     *
+     * @param  \Illuminate\Contracts\Validation\Validator  $validator
+     * @return void
+     *
+     * @throws \Illuminate\Http\Exceptions\HttpResponseException
+     */
+    protected function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(
+            response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $validator->errors(),
+            ], 422)
+        );
     }
 }

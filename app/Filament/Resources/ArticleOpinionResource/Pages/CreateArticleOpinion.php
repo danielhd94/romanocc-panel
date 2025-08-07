@@ -12,6 +12,12 @@ class CreateArticleOpinion extends CreateRecord
 {
     protected static string $resource = ArticleOpinionResource::class;
     
+    # renombrar el titulo de la pagina
+    public function getTitle(): string
+    { 
+        return 'Crear Adición';
+    }
+    # redireccionar a la pagina de index
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');

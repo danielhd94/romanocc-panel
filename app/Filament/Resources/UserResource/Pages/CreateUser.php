@@ -9,4 +9,28 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateUser extends CreateRecord
 {
     protected static string $resource = UserResource::class;
+
+    # renombrar el titulo de la pagina
+    public function getTitle(): string
+    { 
+        return 'Crear Usuario';
+    }
+
+    # Redirigir a la lista de títulos
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
+    
+    # Agregar un botón para regresar a la lista de títulos
+    protected function getHeaderActions(): array
+    {
+        return [
+            Actions\Action::make('back')
+                ->label('Regresar')
+                ->url($this->getResource()::getUrl('index'))
+                ->icon('heroicon-o-arrow-left')
+                ->color('gray'),
+        ];
+    }
 }

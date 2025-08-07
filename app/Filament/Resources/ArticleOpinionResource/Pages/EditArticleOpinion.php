@@ -16,7 +16,7 @@ class EditArticleOpinion extends EditRecord
     # renombrar el titulo de la pagina
     public function getTitle(): string
     {
-        return 'Editar Opinión';
+        return 'Editar Adición';
     }
 
     # redirgir al editar a listado de opiniones

@@ -99,10 +99,14 @@ class UserResource extends Resource
                     ->label('Nombre')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('email')
-                    ->label('Email')
-                    ->searchable()
-                    ->sortable(),
+                // mostrar el telefono si tiene valor, sino mostrar el correo si tiene valor
+                Tables\Columns\TextColumn::make('contact_info')
+                    ->label('Email o Teléfono')
+                    ->getStateUsing(fn ($record) => $record->phone ?: ($record->email ?: '-'))
+                    ->searchable(query: function ($query, $search) {
+                        return $query->where('phone', 'like', "%{$search}%")
+                                    ->orWhere('email', 'like', "%{$search}%");
+                    }),
                 Tables\Columns\TextColumn::make('type')
                     ->label('Tipo')
                     ->badge()
@@ -116,11 +120,6 @@ class UserResource extends Resource
                     ->color(fn (UserStatus $state): string => $state->color())
                     ->icon(fn (UserStatus $state): string => $state->icon())
                     ->sortable(),
-                Tables\Columns\TextColumn::make('email_verified_at')
-                    ->label('Email Verificado')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Fecha de Creación')
                     ->dateTime()
