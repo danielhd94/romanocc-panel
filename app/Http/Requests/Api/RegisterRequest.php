@@ -26,6 +26,7 @@ class RegisterRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'phone' => 'required|string|unique:users,phone',
+            'email' => 'nullable|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:6',
             'password_confirmation' => 'required|same:password',
             'accepted_terms' => 'required|boolean|accepted',
@@ -44,6 +45,8 @@ class RegisterRequest extends FormRequest
             'name.max' => 'El nombre no puede exceder 255 caracteres.',
             'phone.required' => 'El número de teléfono es requerido.',
             'phone.unique' => 'El número de teléfono ya está registrado.',
+            'email.email' => 'El email debe tener un formato válido.',
+            'email.unique' => 'El email ya está registrado.',
             'password.required' => 'La contraseña es requerida.',
             'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
             'password_confirmation.required' => 'La confirmación de contraseña es requerida.',
