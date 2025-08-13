@@ -68,6 +68,7 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $request->name,
             'phone' => $request->phone,
+            'email' => $request->email,
             'password' => Hash::make($request->password),
             'accepted_terms' => true,
             'type' => 'public',
@@ -84,6 +85,7 @@ class AuthController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'phone' => $user->phone,
+                    'email' => $user->email,
                     'type' => $user->type_label,
                     'status' => $user->status_label,
                 ],
