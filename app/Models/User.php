@@ -111,4 +111,31 @@ class User extends Authenticatable
     {
         return $this->status->icon();
     }
+
+    /**
+     * Get the notifications for the user.
+     */
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    /**
+     * Get the FCM tokens for the user.
+     */
+    public function fcmTokens()
+    {
+        return $this->hasMany(UserFcmToken::class);
+    }
+
+    /**
+     * Get active FCM tokens for the user.
+     */
+    public function getActiveFcmTokens()
+    {
+        return $this->fcmTokens()
+            ->where('is_active', true)
+            ->pluck('fcm_token')
+            ->toArray();
+    }
 }

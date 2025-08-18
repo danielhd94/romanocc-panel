@@ -49,7 +49,7 @@ class LawController extends Controller
     {
         $law = Law::with([
             'titles.chapters.subchapters.articles' => function ($query) {
-                $query->orderBy('article_number', 'asc');
+                $query->orderBy('number', 'asc');
             }
         ])->find($id);
 

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Law;
 use App\Models\Title;
+use App\Models\Article;
 
 class Chapter extends Model
 {
@@ -24,4 +25,12 @@ class Chapter extends Model
     {
         return $this->hasMany(Subchapter::class, 'chapter_id', 'id');
     }
+
+    public function articles()
+    {
+        return $this->hasMany(Article::class, 'chapter_id', 'id')
+            ->whereNull('subchapter_id')
+            ->orderBy('article_number', 'asc');
+    }
+
 }
