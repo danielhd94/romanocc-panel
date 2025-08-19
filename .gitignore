@@ -22,3 +22,9 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Local development tools (not for production)
+/app/Console/Commands/ImportLawFromJson.php
+/app/Filament/Pages/ImportLaw.php
+/resources/views/filament/pages/import-law.blade.php
+/app/Console/Kernel.php

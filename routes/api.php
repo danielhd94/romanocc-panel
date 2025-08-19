@@ -5,6 +5,10 @@ use App\Http\Controllers\Api\LawController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\InformationAppController;
 use App\Http\Controllers\Api\ArticleVisitController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\ForumController;
+use App\Http\Controllers\Api\V2\LawController as LawControllerV2;
+use App\Http\Controllers\Api\V2\RegulationController as RegulationControllerV2;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -26,6 +30,11 @@ Route::post('/auth/register', [AuthController::class, 'register']);
 // Information app routes (public)
 Route::get('/app/information', [InformationAppController::class, 'index']);
 
+// Forum routes (public for reading, protected for writing)
+Route::get('/forum/topics', [ForumController::class, 'getTopics']);
+Route::get('/forum/topics/{id}', [ForumController::class, 'getTopicDetail']);
+Route::get('/forum/topics/{id}/comments', [ForumController::class, 'getComments']);
+
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     // Auth routes
@@ -36,10 +45,35 @@ Route::middleware('auth:sanctum')->group(function () {
     // Law routes
     Route::get('/laws', [LawController::class, 'index']);
     Route::get('/laws/{id}', [LawController::class, 'show']);
+
+    // V2 Law routes (mobile)
+    Route::prefix('v2')->group(function () {
+        Route::get('/laws', [LawControllerV2::class, 'index']);
+        Route::get('/laws/{id}', [LawControllerV2::class, 'show']);
+        Route::get('/laws/{id}/detail', [LawControllerV2::class, 'detail']);
+        
+        // Regulation routes
+        Route::get('/regulations', [RegulationControllerV2::class, 'index']);
+        Route::get('/regulations/{id}', [RegulationControllerV2::class, 'show']);
+        Route::get('/regulations/{id}/detail', [RegulationControllerV2::class, 'detail']);
+    });
+
+    // Forum routes (protected for writing)
+    Route::post('/forum/topics/create', [ForumController::class, 'createTopic']);
+    Route::put('/forum/topics/{id}', [ForumController::class, 'updateTopic']);
+    Route::delete('/forum/topics/{id}', [ForumController::class, 'deleteTopic']);
+    Route::post('/forum/topics/{id}/comments/create', [ForumController::class, 'createComment']);
     
     // Search routes
     Route::get('/search', [SearchController::class, 'search']);
     
     // Article visit routes
     Route::post('/articles/{article}/visit', [ArticleVisitController::class, 'store']);
+    
+    // Notification routes
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/user/fcm-token', [NotificationController::class, 'updateFcmToken']);
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
 }); 
