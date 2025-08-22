@@ -143,50 +143,24 @@ class AuthController extends Controller
     public function updateProfile(Request $request): JsonResponse
     {
         $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'phone' => 'sometimes|string|max:20|unique:users,phone,' . $request->user()->id,
-            'current_password' => 'required_with:new_password|string',
-            'new_password' => 'sometimes|string|min:6|confirmed',
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|max:20|unique:users,phone,' . $request->user()->id,
         ], [
+            'name.required' => 'El nombre es requerido.',
             'name.string' => 'El nombre debe ser una cadena de texto.',
             'name.max' => 'El nombre no puede tener más de 255 caracteres.',
+            'phone.required' => 'El teléfono es requerido.',
             'phone.string' => 'El teléfono debe ser una cadena de texto.',
             'phone.max' => 'El teléfono no puede tener más de 20 caracteres.',
             'phone.unique' => 'Este número de teléfono ya está registrado.',
-            'current_password.required_with' => 'La contraseña actual es requerida para cambiar la contraseña.',
-            'current_password.string' => 'La contraseña actual debe ser una cadena de texto.',
-            'new_password.string' => 'La nueva contraseña debe ser una cadena de texto.',
-            'new_password.min' => 'La nueva contraseña debe tener al menos 6 caracteres.',
-            'new_password.confirmed' => 'La confirmación de la nueva contraseña no coincide.',
         ]);
 
         $user = $request->user();
-        $updateData = [];
-
-        // Update name if provided
-        if ($request->has('name')) {
-            $updateData['name'] = $request->name;
-        }
-
-        // Update phone if provided
-        if ($request->has('phone')) {
-            $updateData['phone'] = $request->phone;
-        }
-
-        // Update password if provided
-        if ($request->has('new_password')) {
-            // Verify current password
-            if (!Hash::check($request->current_password, $user->password)) {
-                throw ValidationException::withMessages([
-                    'current_password' => ['La contraseña actual es incorrecta.'],
-                ]);
-            }
-
-            $updateData['password'] = Hash::make($request->new_password);
-        }
-
-        // Update user
-        $user->update($updateData);
+        
+        $user->update([
+            'name' => $request->name,
+            'phone' => $request->phone,
+        ]);
 
         return response()->json([
             'success' => true,
