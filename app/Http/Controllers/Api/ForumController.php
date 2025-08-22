@@ -47,6 +47,43 @@ class ForumController extends Controller
     }
 
     /**
+     * Get topics of the authenticated user
+     */
+    public function getMyTopics(): JsonResponse
+    {
+        try {
+            $topics = ForumTopic::withUser()
+                ->where('user_id', auth()->id())
+                ->latest()
+                ->get()
+                ->map(function ($topic) {
+                    return [
+                        'id' => $topic->id,
+                        'title' => $topic->title,
+                        'content' => $topic->content,
+                        'user_id' => $topic->user_id,
+                        'user_name' => $topic->user->name,
+                        'comments_count' => $topic->comments_count,
+                        'created_at' => $topic->created_at,
+                        'updated_at' => $topic->updated_at,
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'data' => $topics,
+                'message' => 'Tus temas obtenidos exitosamente'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener tus temas',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Get a specific forum topic
      */
     public function getTopicDetail($id): JsonResponse
