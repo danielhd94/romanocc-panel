@@ -136,20 +136,29 @@ class AuthController extends Controller
 
     /**
      * Update authenticated user profile
+     * Supports both mobile app (partial updates) and admin panel (full updates)
      *
      * @param Request $request
      * @return JsonResponse
      */
     public function updateProfile(Request $request): JsonResponse
     {
-        $request->validate([
+        $user = $request->user();
+        
+        // Determine validation rules based on request context
+        $validationRules = [
             'name' => 'sometimes|string|max:255',
-            'phone' => 'sometimes|string|max:20|unique:users,phone,' . $request->user()->id,
+            'phone' => 'sometimes|string|max:20|unique:users,phone,' . $user->id,
             'current_password' => 'required_with:new_password|string',
             'new_password' => 'sometimes|string|min:6|confirmed',
-        ], [
+        ];
+
+        // Custom error messages
+        $errorMessages = [
+            'name.required' => 'El nombre es requerido.',
             'name.string' => 'El nombre debe ser una cadena de texto.',
             'name.max' => 'El nombre no puede tener más de 255 caracteres.',
+            'phone.required' => 'El teléfono es requerido.',
             'phone.string' => 'El teléfono debe ser una cadena de texto.',
             'phone.max' => 'El teléfono no puede tener más de 20 caracteres.',
             'phone.unique' => 'Este número de teléfono ya está registrado.',
@@ -158,9 +167,11 @@ class AuthController extends Controller
             'new_password.string' => 'La nueva contraseña debe ser una cadena de texto.',
             'new_password.min' => 'La nueva contraseña debe tener al menos 6 caracteres.',
             'new_password.confirmed' => 'La confirmación de la nueva contraseña no coincide.',
-        ]);
+        ];
 
-        $user = $request->user();
+        $request->validate($validationRules, $errorMessages);
+
+        // Prepare update data
         $updateData = [];
 
         // Update name if provided
@@ -181,12 +192,14 @@ class AuthController extends Controller
                     'current_password' => ['La contraseña actual es incorrecta.'],
                 ]);
             }
-
+            
             $updateData['password'] = Hash::make($request->new_password);
         }
 
-        // Update user
-        $user->update($updateData);
+        // Update user if there are changes
+        if (!empty($updateData)) {
+            $user->update($updateData);
+        }
 
         return response()->json([
             'success' => true,

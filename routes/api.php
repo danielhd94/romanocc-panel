@@ -59,6 +59,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Forum routes (protected for writing)
+    Route::get('/forum/my-topics', [ForumController::class, 'getMyTopics']);
     Route::post('/forum/topics/create', [ForumController::class, 'createTopic']);
     Route::put('/forum/topics/{id}', [ForumController::class, 'updateTopic']);
     Route::delete('/forum/topics/{id}', [ForumController::class, 'deleteTopic']);
