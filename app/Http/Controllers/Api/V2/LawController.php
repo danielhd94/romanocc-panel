@@ -4,6 +4,10 @@ namespace App\Http\Controllers\Api\V2;
 
 use App\Http\Controllers\Controller;
 use App\Models\Law;
+use App\Models\Article;
+use App\Models\ArticleOpinion;
+use App\Models\ArticleResolution;
+use App\Models\ArticleVideo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -146,11 +150,18 @@ class LawController extends Controller
 
     /**
      * GET /api/v2/laws/{id}/detail
-     * Retorna información plana de la ley (para servicios)
+     * Retorna información plana de la ley con opiniones, resoluciones, videos y adiciones
      */
     public function detail(Request $request, int $id): JsonResponse
     {
-        $law = Law::find($id);
+        $law = Law::with([
+            'titles.chapters.articles.opinions',
+            'titles.chapters.articles.resolutions',
+            'titles.chapters.articles.videos',
+            'titles.chapters.subchapters.articles.opinions',
+            'titles.chapters.subchapters.articles.resolutions',
+            'titles.chapters.subchapters.articles.videos'
+        ])->find($id);
 
         if (!$law) {
             return response()->json([
@@ -159,15 +170,117 @@ class LawController extends Controller
             ], 404);
         }
 
+        // Recopilar todos los artículos con sus datos relacionados
+        $articlesData = collect();
+
+        foreach ($law->titles as $title) {
+            foreach ($title->chapters as $chapter) {
+                // Artículos directos del capítulo
+                foreach ($chapter->articles as $article) {
+                    $articlesData->push([
+                        'id' => $article->id,
+                        'law_id' => $law->id,
+                        'law_name' => $law->name,
+                        'title' => $article->article_title,
+                        'content' => $article->article_content,
+                        'number' => $article->article_number,
+                        'chapter' => $chapter->chapter_title ?: 'CAPÍTULO ' . $chapter->chapter_number,
+                        'subchapter' => null,
+                        'opinions' => $article->opinions->map(function ($opinion) {
+                            return [
+                                'id' => $opinion->id,
+                                'opinion' => $opinion->opinion,
+                                'url_file' => $opinion->url_file,
+                                'user_name' => $opinion->user ? $opinion->user->name : 'Usuario',
+                                'created_at' => $opinion->created_at,
+                                'updated_at' => $opinion->updated_at,
+                            ];
+                        }),
+                        'resolutions' => $article->resolutions->map(function ($resolution) {
+                            return [
+                                'id' => $resolution->id,
+                                'name' => $resolution->name,
+                                'url' => $resolution->url,
+                                'url_pdf' => $resolution->url_pdf,
+                                'user_name' => $resolution->user ? $resolution->user->name : 'Usuario',
+                                'created_at' => $resolution->created_at,
+                                'updated_at' => $resolution->updated_at,
+                            ];
+                        }),
+                        'videos' => $article->videos->map(function ($video) {
+                            return [
+                                'id' => $video->id,
+                                'name' => $video->name,
+                                'url' => $video->url,
+                                'user_name' => $video->user ? $video->user->name : 'Usuario',
+                                'created_at' => $video->created_at,
+                                'updated_at' => $video->updated_at,
+                            ];
+                        }),
+                        'created_at' => $article->created_at,
+                        'updated_at' => $article->updated_at,
+                    ]);
+                }
+
+                // Artículos de subcapítulos
+                foreach ($chapter->subchapters as $subchapter) {
+                    foreach ($subchapter->articles as $article) {
+                        $articlesData->push([
+                            'id' => $article->id,
+                            'law_id' => $law->id,
+                            'law_name' => $law->name,
+                            'title' => $article->article_title,
+                            'content' => $article->article_content,
+                            'number' => $article->article_number,
+                            'chapter' => $chapter->chapter_title ?: 'CAPÍTULO ' . $chapter->chapter_number,
+                            'subchapter' => $subchapter->subchapter_title,
+                            'opinions' => $article->opinions->map(function ($opinion) {
+                                return [
+                                    'id' => $opinion->id,
+                                    'opinion' => $opinion->opinion,
+                                    'url_file' => $opinion->url_file,
+                                    'user_name' => $opinion->user ? $opinion->user->name : 'Usuario',
+                                    'created_at' => $opinion->created_at,
+                                    'updated_at' => $opinion->updated_at,
+                                ];
+                            }),
+                            'resolutions' => $article->resolutions->map(function ($resolution) {
+                                return [
+                                    'id' => $resolution->id,
+                                    'name' => $resolution->name,
+                                    'url' => $resolution->url,
+                                    'url_pdf' => $resolution->url_pdf,
+                                    'user_name' => $resolution->user ? $resolution->user->name : 'Usuario',
+                                    'created_at' => $resolution->created_at,
+                                    'updated_at' => $resolution->updated_at,
+                                ];
+                            }),
+                            'videos' => $article->videos->map(function ($video) {
+                                return [
+                                    'id' => $video->id,
+                                    'name' => $video->name,
+                                    'url' => $video->url,
+                                    'user_name' => $video->user ? $video->user->name : 'Usuario',
+                                    'created_at' => $video->created_at,
+                                    'updated_at' => $video->updated_at,
+                                ];
+                            }),
+                            'created_at' => $article->created_at,
+                            'updated_at' => $article->updated_at,
+                        ]);
+                    }
+                }
+            }
+        }
+
         return response()->json([
             'success' => true,
             'data' => [
                 'id' => $law->id,
                 'title' => $law->name,
                 'description' => 'Ley General de Contrataciones Públicas',
-                'content' => 'Contenido completo de la ley...',
                 'category' => 'ley',
-                'file_url' => null,
+                'articles' => $articlesData->values(),
                 'created_at' => $law->created_at,
                 'updated_at' => $law->updated_at,
             ]
