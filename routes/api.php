@@ -3,10 +3,10 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\LawController;
 use App\Http\Controllers\Api\SearchController;
-use App\Http\Controllers\Api\InformationAppController;
 use App\Http\Controllers\Api\ArticleVisitController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ForumController;
+use App\Http\Controllers\Api\AppInfoController;
 use App\Http\Controllers\Api\V2\LawController as LawControllerV2;
 use App\Http\Controllers\Api\V2\RegulationController as RegulationControllerV2;
 use Illuminate\Http\Request;
@@ -28,7 +28,7 @@ Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/register', [AuthController::class, 'register']);
 
 // Information app routes (public)
-Route::get('/app/information', [InformationAppController::class, 'index']);
+Route::get('/app-info', [AppInfoController::class, 'index']);
 
 // Forum routes (public for reading, protected for writing)
 Route::get('/forum/topics', [ForumController::class, 'getTopics']);
