@@ -39,7 +39,7 @@ class SystemOverview extends BaseWidget
                 ->descriptionIcon('heroicon-m-document-check')
                 ->color('warning'),
 
-            Stat::make('Total de Opiniones', ArticleOpinion::count())
+            Stat::make('Total de Adiciones', ArticleOpinion::count())
                 ->description('Opiniones registradas')
                 ->descriptionIcon('heroicon-m-chat-bubble-left-right')
                 ->color('info'),
@@ -49,10 +49,6 @@ class SystemOverview extends BaseWidget
                 ->descriptionIcon('heroicon-m-video-camera')
                 ->color('danger'),
 
-            Stat::make('Total de Comentarios', ArticleComment::count())
-                ->description('Comentarios registrados')
-                ->descriptionIcon('heroicon-m-chat-bubble-left')
-                ->color('gray'),
         ];
     }
 } 

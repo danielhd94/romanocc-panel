@@ -90,11 +90,9 @@ class ArticleResource extends Resource
                     ->visible(fn (callable $get) => $get('law_id') !== null && $get('title_id') !== null && $get('chapter_id') !== null),
                 Forms\Components\TextInput::make('article_number')
                     ->label('Número de Artículo')
-                    ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('article_title')
                     ->label('Título de Artículo')
-                    ->required()
                     ->maxLength(255),
                 Forms\Components\RichEditor::make('article_content')
                     ->label('Contenido de Artículo')
