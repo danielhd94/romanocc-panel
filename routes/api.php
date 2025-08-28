@@ -67,6 +67,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/forum/topics/{id}', [ForumController::class, 'updateTopic']);
     Route::delete('/forum/topics/{id}', [ForumController::class, 'deleteTopic']);
     Route::post('/forum/topics/{id}/comments/create', [ForumController::class, 'createComment']);
+    Route::post('/forum/topics/{id}/reply-notification', [ForumController::class, 'sendReplyNotification']);
     
     // Search routes
     Route::get('/search', [SearchController::class, 'search']);
