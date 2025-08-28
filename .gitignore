@@ -28,3 +28,8 @@ Thumbs.db
 /app/Filament/Pages/ImportLaw.php
 /resources/views/filament/pages/import-law.blade.php
 /app/Console/Kernel.php
+
+# Temporary numbering tools (used for data cleanup)
+/app/Console/Commands/UpdateNumberingCommand.php
+/app/Console/Commands/CleanTitlesCommand.php
+/app/Console/Commands/UpdateArticlesCommand.php

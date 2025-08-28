@@ -3,10 +3,10 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\LawController;
 use App\Http\Controllers\Api\SearchController;
-use App\Http\Controllers\Api\InformationAppController;
 use App\Http\Controllers\Api\ArticleVisitController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ForumController;
+use App\Http\Controllers\Api\AppInfoController;
 use App\Http\Controllers\Api\V2\LawController as LawControllerV2;
 use App\Http\Controllers\Api\V2\RegulationController as RegulationControllerV2;
 use Illuminate\Http\Request;
@@ -28,7 +28,7 @@ Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/register', [AuthController::class, 'register']);
 
 // Information app routes (public)
-Route::get('/app/information', [InformationAppController::class, 'index']);
+Route::get('/app-info', [AppInfoController::class, 'index']);
 
 // Forum routes (public for reading, protected for writing)
 Route::get('/forum/topics', [ForumController::class, 'getTopics']);
@@ -56,6 +56,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/regulations', [RegulationControllerV2::class, 'index']);
         Route::get('/regulations/{id}', [RegulationControllerV2::class, 'show']);
         Route::get('/regulations/{id}/detail', [RegulationControllerV2::class, 'detail']);
+        
+        // Search routes
+        Route::get('/search', [\App\Http\Controllers\Api\V2\SearchController::class, 'search']);
     });
 
     // Forum routes (protected for writing)
@@ -64,6 +67,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/forum/topics/{id}', [ForumController::class, 'updateTopic']);
     Route::delete('/forum/topics/{id}', [ForumController::class, 'deleteTopic']);
     Route::post('/forum/topics/{id}/comments/create', [ForumController::class, 'createComment']);
+    Route::post('/forum/topics/{id}/reply-notification', [ForumController::class, 'sendReplyNotification']);
     
     // Search routes
     Route::get('/search', [SearchController::class, 'search']);

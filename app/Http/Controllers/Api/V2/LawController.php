@@ -15,10 +15,13 @@ class LawController extends Controller
 {
     /**
      * GET /api/v2/laws
-     * Retorna la estructura jerárquica completa para la app móvil
+     * Retorna la estructura jerárquica paginada para la app móvil
      */
     public function index(Request $request): JsonResponse
     {
+        $page = $request->get('page', 1);
+        $perPage = $request->get('per_page', 5); // Cargar 5 títulos por página
+        
         $laws = Law::with([
             'titles.chapters' => function ($q) {
                 $q->with([
@@ -32,8 +35,8 @@ class LawController extends Controller
             },
         ])->get();
 
-        // Transformar a la estructura esperada por la app móvil
-        $formattedData = $laws->flatMap(function ($law) {
+                // Transformar a la estructura esperada por la app móvil
+        $allFormattedData = $laws->flatMap(function ($law) {
             return $law->titles->map(function ($title) {
                 return [
                     'title' => (string) $title->title,
@@ -72,9 +75,22 @@ class LawController extends Controller
             });
         })->values();
 
+        // Aplicar paginación
+        $totalItems = $allFormattedData->count();
+        $offset = ($page - 1) * $perPage;
+        $paginatedData = $allFormattedData->slice($offset, $perPage)->values();
+
         return response()->json([
             'success' => true,
-            'data' => $formattedData
+            'data' => $paginatedData,
+            'pagination' => [
+                'current_page' => $page,
+                'per_page' => $perPage,
+                'total_items' => $totalItems,
+                'total_pages' => ceil($totalItems / $perPage),
+                'has_next_page' => ($page * $perPage) < $totalItems,
+                'has_previous_page' => $page > 1
+            ]
         ], 200);
     }
 

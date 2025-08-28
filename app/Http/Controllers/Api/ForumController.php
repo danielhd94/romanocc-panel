@@ -4,12 +4,20 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ForumTopic;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
 
 class ForumController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     /**
      * Get all forum topics
      */
@@ -335,6 +343,15 @@ class ForumController extends Controller
             // Por ahora solo incrementamos el contador de comentarios
             $topic->increment('comments_count');
 
+            // Enviar notificación al autor del tema
+            $this->notificationService->sendForumTopicCommentNotification(
+                $topic->user_id,
+                auth()->user()->name,
+                $topic->title,
+                $request->content,
+                $topic->id
+            );
+
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -352,6 +369,56 @@ class ForumController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al crear el comentario',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Send notification for forum comment reply (called from frontend when reply is created in Firebase)
+     */
+    public function sendReplyNotification(Request $request, $topicId): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'comment_owner_id' => 'required|integer',
+                'reply_text' => 'required|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error de validación',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $topic = ForumTopic::find($topicId);
+
+            if (!$topic) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tema no encontrado'
+                ], 404);
+            }
+
+            // Enviar notificación al autor del comentario original
+            $this->notificationService->sendForumCommentReplyNotification(
+                $request->comment_owner_id,
+                auth()->user()->name,
+                $topic->title,
+                $request->reply_text,
+                $topic->id
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Notificación de respuesta enviada exitosamente'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al enviar notificación de respuesta',
                 'error' => $e->getMessage()
             ], 500);
         }
