@@ -56,6 +56,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/regulations', [RegulationControllerV2::class, 'index']);
         Route::get('/regulations/{id}', [RegulationControllerV2::class, 'show']);
         Route::get('/regulations/{id}/detail', [RegulationControllerV2::class, 'detail']);
+        
+        // Search routes
+        Route::get('/search', [\App\Http\Controllers\Api\V2\SearchController::class, 'search']);
     });
 
     // Forum routes (protected for writing)
