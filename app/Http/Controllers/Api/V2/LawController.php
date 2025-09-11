@@ -8,11 +8,19 @@ use App\Models\Article;
 use App\Models\ArticleOpinion;
 use App\Models\ArticleResolution;
 use App\Models\ArticleVideo;
+use App\Services\LawStructureService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class LawController extends Controller
 {
+    protected LawStructureService $lawStructureService;
+
+    public function __construct(LawStructureService $lawStructureService)
+    {
+        $this->lawStructureService = $lawStructureService;
+    }
+
     /**
      * GET /api/v2/laws
      * Retorna la estructura jerárquica paginada para la app móvil
@@ -21,57 +29,42 @@ class LawController extends Controller
     {
         $page = $request->get('page', 1);
         $perPage = $request->get('per_page', 5); // Cargar 5 títulos por página
+        $type = $request->get('type'); // Filtrar por tipo: 'ley' o 'reglamento'
         
-        $laws = Law::with([
-            'titles.chapters' => function ($q) {
+        // Determinar si es carga inicial (solo nombres) o búsqueda (con contenido)
+        $isSearchMode = $request->has('search') && !empty($request->get('search'));
+        
+        $query = Law::with([
+            'titles' => function ($q) {
                 $q->with([
                     'articles' => function ($qa) { 
-                        $qa->orderBy('article_number', 'asc'); 
+                        $qa->orderBy('article_number', 'asc');
                     },
-                    'subchapters.articles' => function ($qs) { 
-                        $qs->orderBy('article_number', 'asc'); 
-                    },
+                    'chapters' => function ($qc) {
+                        $qc->with([
+                            'articles' => function ($qa) { 
+                                $qa->orderBy('article_number', 'asc');
+                            },
+                            'subchapters.articles' => function ($qs) { 
+                                $qs->orderBy('article_number', 'asc');
+                            },
+                        ])->orderBy('id', 'asc');
+                    }
                 ])->orderBy('id', 'asc');
             },
-        ])->get();
+        ]);
+        
+        // Aplicar filtro por tipo si se especifica
+        if ($type) {
+            $query->where('type', $type);
+        }
+        
+        $laws = $query->get();
 
-                // Transformar a la estructura esperada por la app móvil
-        $allFormattedData = $laws->flatMap(function ($law) {
-            return $law->titles->map(function ($title) {
-                return [
-                    'title' => (string) $title->title,
-                    'chapters' => $title->chapters->map(function ($chapter) {
-                        $articles = collect();
-
-                        // Artículos directos del capítulo
-                        $articles = $articles->merge($chapter->articles->map(function ($article) {
-                            return [
-                                'number' => $article->article_number,
-                                'title' => $article->article_title,
-                                'content' => $article->article_content,
-                            ];
-                        }));
-
-                        // Artículos de subcapítulos
-                        foreach ($chapter->subchapters as $subchapter) {
-                            foreach ($subchapter->articles as $article) {
-                                $articles->push([
-                                    'number' => $article->article_number,
-                                    'title' => $article->article_title,
-                                    'content' => $article->article_content,
-                                ]);
-                            }
-                        }
-
-                        // Ordenar por número
-                        $articles = $articles->sortBy('number')->values();
-
-                        return [
-                            'chapter' => $chapter->chapter_title ?: "CAPÍTULO " . $chapter->chapter_number,
-                            'articles' => $articles->toArray(),
-                        ];
-                    })->values(),
-                ];
+        // Transformar a la estructura esperada por la app móvil usando el servicio
+        $allFormattedData = $laws->flatMap(function ($law) use ($isSearchMode) {
+            return $law->titles->map(function ($title) use ($isSearchMode) {
+                return $this->lawStructureService->formatTitleWithChapters($title, $isSearchMode);
             });
         })->values();
 
@@ -101,14 +94,21 @@ class LawController extends Controller
     public function show(Request $request, int $id): JsonResponse
     {
         $law = Law::with([
-            'titles.chapters' => function ($q) {
+            'titles' => function ($q) {
                 $q->with([
                     'articles' => function ($qa) { 
                         $qa->orderBy('article_number', 'asc'); 
                     },
-                    'subchapters.articles' => function ($qs) { 
-                        $qs->orderBy('article_number', 'asc'); 
-                    },
+                    'chapters' => function ($qc) {
+                        $qc->with([
+                            'articles' => function ($qa) { 
+                                $qa->orderBy('article_number', 'asc'); 
+                            },
+                            'subchapters.articles' => function ($qs) { 
+                                $qs->orderBy('article_number', 'asc'); 
+                            },
+                        ])->orderBy('id', 'asc');
+                    }
                 ])->orderBy('id', 'asc');
             },
         ])->find($id);
@@ -120,41 +120,19 @@ class LawController extends Controller
             ], 404);
         }
 
-        // Transformar a la estructura esperada por la app móvil
+        // Transformar a la estructura esperada por la app móvil usando el servicio
         $formattedData = $law->titles->map(function ($title) {
+            if ($title->chapters->isNotEmpty()) {
+                $chapters = $title->chapters->map(function ($chapter) {
+                    return $this->lawStructureService->formatChapterForShow($chapter);
+                });
+            } else {
+                $chapters = $this->lawStructureService->createVirtualChapterForShow($title);
+            }
+
             return [
                 'title' => (string) $title->title,
-                'chapters' => $title->chapters->map(function ($chapter) {
-                    $articles = collect();
-
-                    // Artículos directos del capítulo
-                    $articles = $articles->merge($chapter->articles->map(function ($article) {
-                        return [
-                            'number' => $article->article_number,
-                            'title' => $article->article_title,
-                            'content' => $article->article_content,
-                        ];
-                    }));
-
-                    // Artículos de subcapítulos
-                    foreach ($chapter->subchapters as $subchapter) {
-                        foreach ($subchapter->articles as $article) {
-                            $articles->push([
-                                'number' => $article->article_number,
-                                'title' => $article->article_title,
-                                'content' => $article->article_content,
-                            ]);
-                        }
-                    }
-
-                    // Ordenar por número
-                    $articles = $articles->sortBy('number')->values();
-
-                    return [
-                        'chapter' => $chapter->chapter_title ?: "CAPÍTULO " . $chapter->chapter_number,
-                        'articles' => $articles->toArray(),
-                    ];
-                })->values(),
+                'chapters' => $chapters->values(),
             ];
         })->values();
 

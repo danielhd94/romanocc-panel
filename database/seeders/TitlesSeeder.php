@@ -50,6 +50,15 @@ class TitlesSeeder extends Seeder
                 'law_id' => 1,
                 'title' => 'DISPOSICIÓN COMPLEMENTARIA DEROGATORIA',
             ],
+            [
+                'law_id' => 1,
+                'title' => 'TÍTULO VI: DISPOSICIONES ESPECIALES V2',
+            ],
+            // Título para el reglamento (law_id = 2) con solo artículos
+            [
+                'law_id' => 2,
+                'title' => 'TÍTULO I: DISPOSICIONES GENERALES V2',
+            ],
         ];
 
         foreach ($data as $item) {
