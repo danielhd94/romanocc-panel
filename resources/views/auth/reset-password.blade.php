@@ -14,99 +14,179 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #FDFDFC;
+            background: #f8fafc;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
-            position: relative;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(232, 119, 0, 0.02) 0%, rgba(232, 119, 0, 0.05) 100%);
-            pointer-events: none;
-            z-index: -1;
+            transition: background-color 0.2s ease;
         }
 
         .container {
             background: white;
             border-radius: 12px;
-            box-shadow: 0 20px 40px rgba(27, 27, 24, 0.1);
-            border: 1px solid rgba(27, 27, 24, 0.1);
-            padding: 40px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 48px;
             width: 100%;
-            max-width: 400px;
+            max-width: 448px;
             position: relative;
+            transition: all 0.2s ease;
+        }
+
+        /* Dark mode styles */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #0f172a;
+            }
+            
+            .container {
+                background: #1e293b;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+        }
+
+        /* Force dark mode class */
+        .dark body {
+            background: #0f172a;
+        }
+        
+        .dark .container {
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .logo {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 32px;
         }
 
-        .logo img {
-            max-width: 80px;
-            height: auto;
+        .logo-text {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1f2937;
+            letter-spacing: -0.025em;
+            transition: color 0.2s ease;
         }
 
         .title {
             text-align: center;
-            color: #1b1b18;
+            color: #111827;
             font-size: 24px;
             font-weight: 600;
             margin-bottom: 8px;
+            transition: color 0.2s ease;
         }
 
         .subtitle {
             text-align: center;
-            color: #706f6c;
+            color: #6b7280;
             font-size: 14px;
-            margin-bottom: 30px;
+            margin-bottom: 32px;
             line-height: 1.5;
+            transition: color 0.2s ease;
+        }
+
+        /* Dark mode text styles */
+        @media (prefers-color-scheme: dark) {
+            .logo-text {
+                color: #ffffff;
+            }
+            
+            .title {
+                color: #ffffff;
+            }
+            
+            .subtitle {
+                color: #94a3b8;
+            }
+        }
+
+        .dark .logo-text {
+            color: #ffffff;
+        }
+        
+        .dark .title {
+            color: #ffffff;
+        }
+        
+        .dark .subtitle {
+            color: #94a3b8;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 6px;
-            color: #1b1b18;
+            margin-bottom: 8px;
+            color: #374151;
             font-weight: 500;
             font-size: 14px;
+            transition: color 0.2s ease;
         }
 
         .form-control {
             width: 100%;
             padding: 12px 16px;
-            border: 2px solid rgba(27, 27, 24, 0.1);
+            border: 1px solid #d1d5db;
             border-radius: 8px;
             font-size: 16px;
-            transition: border-color 0.3s ease;
-            background-color: #fff;
+            transition: all 0.2s ease;
+            background-color: #ffffff;
+            color: #111827;
         }
 
         .form-control:focus {
             outline: none;
-            border-color: #E87700;
-            box-shadow: 0 0 0 3px rgba(232, 119, 0, 0.1);
+            border-color: #f97316;
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+        }
+
+        .form-control::placeholder {
+            color: #9ca3af;
+        }
+
+        /* Dark mode form styles */
+        @media (prefers-color-scheme: dark) {
+            .form-group label {
+                color: #e2e8f0;
+            }
+            
+            .form-control {
+                border: 1px solid #475569;
+                background-color: #334155;
+                color: #ffffff;
+            }
+            
+            .form-control::placeholder {
+                color: #94a3b8;
+            }
+        }
+
+        .dark .form-group label {
+            color: #e2e8f0;
+        }
+        
+        .dark .form-control {
+            border: 1px solid #475569;
+            background-color: #334155;
+            color: #ffffff;
+        }
+        
+        .dark .form-control::placeholder {
+            color: #94a3b8;
         }
 
         .form-control.error {
-            border-color: #F53003;
-            box-shadow: 0 0 0 3px rgba(245, 48, 3, 0.1);
+            border-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
         }
 
         .error-message {
-            color: #F53003;
+            color: #ef4444;
             font-size: 12px;
             margin-top: 4px;
             display: none;
@@ -114,22 +194,22 @@
         }
 
         .form-control.error:focus {
-            border-color: #F53003;
-            box-shadow: 0 0 0 3px rgba(245, 48, 3, 0.2);
+            border-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
         }
 
         .form-control.success {
-            border-color: #28a745;
-            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
         }
 
         .form-control.success:focus {
-            border-color: #28a745;
-            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.2);
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
         }
 
         .success-message-field {
-            color: #28a745;
+            color: #10b981;
             font-size: 12px;
             margin-top: 4px;
             display: none;
@@ -138,44 +218,44 @@
 
         .btn {
             width: 100%;
-            padding: 14px;
-            background: #E87700;
+            padding: 12px 16px;
+            background: #f97316;
             color: white;
             border: none;
             border-radius: 8px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 500;
             cursor: pointer;
-            transition: background-color 0.3s ease;
-            margin-top: 10px;
+            transition: all 0.2s ease;
+            margin-top: 8px;
         }
 
         .btn:hover {
-            background: #d66a00;
+            background: #ea580c;
         }
 
         .btn:disabled {
-            background: #ccc;
+            background: #64748b;
             cursor: not-allowed;
         }
 
         .success-message {
-            background: #d4edda;
-            color: #155724;
+            background: #064e3b;
+            color: #6ee7b7;
             padding: 12px;
             border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #c3e6cb;
+            margin-bottom: 24px;
+            border: 1px solid #065f46;
             display: none;
         }
 
         .error-alert {
-            background: #fff2f2;
-            color: #F53003;
+            background: #7f1d1d;
+            color: #fca5a5;
             padding: 12px;
             border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid rgba(245, 48, 3, 0.2);
+            margin-bottom: 24px;
+            border: 1px solid #991b1b;
             display: none;
         }
 
@@ -183,11 +263,13 @@
             display: none;
             text-align: center;
             margin-top: 20px;
+            color: #6b7280;
+            transition: color 0.2s ease;
         }
 
         .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #E87700;
+            border: 3px solid #e5e7eb;
+            border-top: 3px solid #f97316;
             border-radius: 50%;
             width: 30px;
             height: 30px;
@@ -195,30 +277,35 @@
             margin: 0 auto 10px;
         }
 
+        /* Dark mode loading styles */
+        @media (prefers-color-scheme: dark) {
+            .loading {
+                color: #e2e8f0;
+            }
+            
+            .spinner {
+                border: 3px solid #475569;
+            }
+        }
+
+        .dark .loading {
+            color: #e2e8f0;
+        }
+        
+        .dark .spinner {
+            border: 3px solid #475569;
+        }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
 
-        .back-link {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .back-link a {
-            color: #E87700;
-            text-decoration: none;
-            font-size: 14px;
-        }
-
-        .back-link a:hover {
-            text-decoration: underline;
-        }
-
-        @media (max-width: 480px) {
+        @media (max-width: 640px) {
             .container {
-                padding: 30px 20px;
-                margin: 10px;
+                padding: 24px;
+                margin: 16px;
+                max-width: calc(100% - 32px);
             }
         }
     </style>
@@ -226,7 +313,7 @@
 <body>
     <div class="container">
         <div class="logo">
-            <img src="{{ asset('images/logo.png') }}" alt="RomanoCC Logo" onerror="this.style.display='none'">
+            <div class="logo-text">RomanoCC</div>
         </div>
 
         <h1 class="title">Restablecer Contraseña</h1>
@@ -280,13 +367,27 @@
             <div class="spinner"></div>
             <p>Actualizando contraseña...</p>
         </div>
-
-        <div class="back-link">
-            <a href="{{ url('/') }}">← Volver al inicio</a>
-        </div>
     </div>
 
     <script>
+        // Theme detection and application
+        function applyTheme() {
+            const isDark = localStorage.getItem('theme') === 'dark' || 
+                          (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+
+        // Apply theme on load
+        applyTheme();
+
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('resetPasswordForm');
             const submitBtn = document.getElementById('submitBtn');
