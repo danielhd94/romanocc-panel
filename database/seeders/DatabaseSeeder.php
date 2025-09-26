@@ -19,6 +19,8 @@ class DatabaseSeeder extends Seeder
             TitlesSeeder::class,
             ChaptersSeeder::class,
             SubchaptersSeeder::class,
+            ArticlesSeeder::class,
+            InformationAppSeeder::class,
         ]);
 
         User::factory()->create([

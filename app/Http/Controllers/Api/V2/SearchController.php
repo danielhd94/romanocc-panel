@@ -5,11 +5,19 @@ namespace App\Http\Controllers\Api\V2;
 use App\Http\Controllers\Controller;
 use App\Models\Law;
 use App\Models\Regulation;
+use App\Services\LawStructureService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class SearchController extends Controller
 {
+    protected LawStructureService $lawStructureService;
+
+    public function __construct(LawStructureService $lawStructureService)
+    {
+        $this->lawStructureService = $lawStructureService;
+    }
+
     /**
      * Buscar en leyes y reglamentos
      */
@@ -27,42 +35,43 @@ class SearchController extends Controller
         $page = $request->input('page', 1);
         $perPage = $request->input('per_page', 10);
 
+        // La normalización ahora se maneja en el servicio
+
         $results = collect();
 
         // Buscar en leyes (que incluye tanto leyes como reglamentos)
         if ($type === 'ley' || $type === 'reglamento' || $type === 'ambos') {
-                           $laws = Law::with([
-                   'titles.chapters' => function ($q) use ($query) {
-                       $q->with([
-                           'articles' => function ($qa) use ($query) {
-                               $qa->where(function ($q) use ($query) {
-                                   $q->where('article_title', 'like', "%{$query}%")
-                                     ->orWhere('article_content', 'like', "%{$query}%");
-                               });
-                           },
-                           'subchapters.articles' => function ($qs) use ($query) {
-                               $qs->where(function ($q) use ($query) {
-                                   $q->where('article_title', 'like', "%{$query}%")
-                                     ->orWhere('article_content', 'like', "%{$query}%");
-                               });
-                           },
-                       ]);
-                   },
-               ])
-               ->whereHas('titles.chapters.articles', function ($q) use ($query) {
-                   $q->where('article_title', 'like', "%{$query}%")
-                     ->orWhere('article_content', 'like', "%{$query}%");
-               })
-               ->orWhereHas('titles.chapters.subchapters.articles', function ($q) use ($query) {
-                   $q->where('article_title', 'like', "%{$query}%")
-                     ->orWhere('article_content', 'like', "%{$query}%");
-               })
-               ->get()
-               ->flatMap(function ($law) use ($type, $query) {
-                   return $this->formatLawForSearch($law, $type, $query);
-               });
+            // Aplicar filtro por tipo si se especifica
+            $queryBuilder = Law::query();
+            if ($type !== 'ambos') {
+                $queryBuilder->where('type', $type);
+            }
 
-               $results = $results->merge($laws);
+            $laws = $queryBuilder->with([
+                'titles.articles',
+                'titles.chapters.articles',
+                'titles.chapters.subchapters.articles',
+            ])
+            ->where(function ($q) use ($query) {
+                $q->whereHas('titles.articles', function ($subQ) use ($query) {
+                    $subQ->where('article_title', 'like', "%{$query}%")
+                         ->orWhere('article_content', 'like', "%{$query}%");
+                })
+                ->orWhereHas('titles.chapters.articles', function ($subQ) use ($query) {
+                    $subQ->where('article_title', 'like', "%{$query}%")
+                         ->orWhere('article_content', 'like', "%{$query}%");
+                })
+                ->orWhereHas('titles.chapters.subchapters.articles', function ($subQ) use ($query) {
+                    $subQ->where('article_title', 'like', "%{$query}%")
+                         ->orWhere('article_content', 'like', "%{$query}%");
+                });
+            })
+            ->get()
+            ->flatMap(function ($law) use ($type, $query) {
+                return $this->formatLawForSearch($law, $type, $query);
+            });
+
+            $results = $results->merge($laws);
         }
 
         // Aplicar paginación
@@ -99,55 +108,15 @@ class SearchController extends Controller
 
         // Mantener la estructura jerárquica original
         foreach ($law->titles as $title) {
-            $formattedChapters = [];
+            $formattedTitle = $this->lawStructureService->formatTitleForSearch($title, $query);
             
-            foreach ($title->chapters as $chapter) {
-                $chapterArticles = collect();
-                
-                // Artículos directos del capítulo
-                foreach ($chapter->articles as $article) {
-                    $contentFragment = $this->extractTextFragment($article->article_content, $query);
-                    if (!empty($contentFragment)) {
-                        $chapterArticles->push([
-                            'number' => $article->article_number,
-                            'title' => $article->article_title,
-                            'content' => $article->article_content,
-                            'content_fragment' => $contentFragment,
-                        ]);
-                    }
-                }
-
-                // Artículos de subcapítulos
-                foreach ($chapter->subchapters as $subchapter) {
-                    foreach ($subchapter->articles as $article) {
-                        $contentFragment = $this->extractTextFragment($article->article_content, $query);
-                        if (!empty($contentFragment)) {
-                            $chapterArticles->push([
-                                'number' => $article->article_number,
-                                'title' => $article->article_title,
-                                'content' => $article->article_content,
-                                'content_fragment' => $contentFragment,
-                            ]);
-                        }
-                    }
-                }
-
-                // Solo incluir capítulos que tengan artículos con coincidencias
-                if ($chapterArticles->count() > 0) {
-                    $formattedChapters[] = [
-                        'chapter' => $chapter->chapter_title ?: "CAPÍTULO " . $chapter->chapter_number,
-                        'articles' => $chapterArticles->sortBy('number')->values()->toArray(),
-                    ];
-                }
-            }
-
             // Solo incluir títulos que tengan capítulos con artículos
-            if (count($formattedChapters) > 0) {
+            if (!empty($formattedTitle['chapters'])) {
                 $formattedTitles[] = [
                     'id' => $law->id,
-                    'title' => (string) $title->title,
+                    'title' => $formattedTitle['title'],
                     'type' => $type,
-                    'chapters' => $formattedChapters,
+                    'chapters' => $formattedTitle['chapters'],
                 ];
             }
         }
@@ -156,43 +125,4 @@ class SearchController extends Controller
         return $formattedTitles;
     }
 
-    /**
-     * Extraer fragmento de texto que contiene la búsqueda
-     */
-    private function extractTextFragment($content, $query, $maxWords = 30)
-    {
-        $lowerContent = strtolower($content);
-        $lowerQuery = strtolower($query);
-        
-        $position = strpos($lowerContent, $lowerQuery);
-        
-        if ($position === false) {
-            return '';
-        }
-        
-        // Calcular posición de inicio y fin del fragmento (aumentado para más contexto)
-        $contextSize = 150; // Caracteres antes y después (aumentado para más contexto)
-        $start = max(0, $position - $contextSize);
-        $end = min(strlen($content), $position + strlen($query) + $contextSize);
-        
-        $fragment = substr($content, $start, $end - $start);
-        
-        // Asegurar que el fragmento comience y termine en palabras completas
-        $words = explode(' ', $fragment);
-        if (count($words) > $maxWords) {
-            $words = array_slice($words, 0, $maxWords);
-        }
-        
-        $fragment = implode(' ', $words);
-        
-        // Agregar puntos suspensivos si es necesario
-        if ($start > 0) {
-            $fragment = '...' . $fragment;
-        }
-        if ($end < strlen($content)) {
-            $fragment = $fragment . '...';
-        }
-        
-        return trim($fragment);
-    }
 }
