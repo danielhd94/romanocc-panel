@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\ForumController;
 use App\Http\Controllers\Api\AppInfoController;
 use App\Http\Controllers\Api\V2\LawController as LawControllerV2;
 use App\Http\Controllers\Api\V2\RegulationController as RegulationControllerV2;
+use App\Http\Controllers\Auth\PasswordResetController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -26,6 +27,8 @@ use Illuminate\Support\Facades\Route;
 // Public routes
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/register', [AuthController::class, 'register']);
+Route::post('/auth/forgot-password', [PasswordResetController::class, 'sendResetLink']);
+Route::post('/auth/reset-password', [PasswordResetController::class, 'resetPassword']);
 
 // Information app routes (public)
 Route::get('/app-info', [AppInfoController::class, 'index']);
