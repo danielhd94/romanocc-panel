@@ -98,6 +98,46 @@ class ArticleResource extends Resource
                     ->label('Contenido de Artículo')
                     ->required()
                     ->columnSpanFull(),
+                
+                # Sección de archivos
+                Forms\Components\Section::make('Archivos Adjuntos')
+                    ->description('Carga archivos relacionados con este artículo (imágenes, PDFs, documentos, etc.)')
+                    ->schema([
+                        Forms\Components\Repeater::make('files')
+                            ->label('Archivos')
+                            ->relationship('files')
+                            ->schema([
+                                Forms\Components\FileUpload::make('file_path')
+                                    ->label('Archivo')
+                                    ->required()
+                                    ->acceptedFileTypes([
+                                        'image/jpeg',
+                                        'image/png', 
+                                        'image/gif',
+                                        'image/webp',
+                                        'application/pdf',
+                                        'application/msword',
+                                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                                        'application/vnd.ms-excel',
+                                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                        'text/plain',
+                                        'text/csv'
+                                    ])
+                                    ->maxSize(10240) // 10MB máximo por archivo
+                                    ->directory('article-files')
+                                    ->visibility('public')
+                                    ->downloadable()
+                                    ->openable()
+                                    ->previewable(),
+                            ])
+                            ->addActionLabel('Agregar Archivo')
+                            ->collapsible()
+                            ->columnSpanFull()
+                            ->nullable(),
+                    ])
+                    ->collapsible()
+                    ->collapsed(false)
+                    ->columnSpanFull(),
             ])->columns(3);
     }
 
@@ -127,6 +167,14 @@ class ArticleResource extends Resource
                     })
                     ->sortable(),
                 
+                Tables\Columns\TextColumn::make('files_count')
+                    ->label('Archivos')
+                    ->counts('files')
+                    ->badge()
+                    ->color(fn ($state) => $state > 0 ? 'success' : 'gray')
+                    ->formatStateUsing(fn ($state) => $state > 0 ? "{$state} archivo(s)" : 'Sin archivos')
+                    ->sortable(),
+                
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Fecha de Creación')
                     ->dateTime()
@@ -151,12 +199,12 @@ class ArticleResource extends Resource
             ]);
     }
 
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
-    }
+    // public static function getRelations(): array
+    // {
+    //     return [
+    //         RelationManagers\FilesRelationManager::class,
+    //     ];
+    // }
 
     public static function getPages(): array
     {
