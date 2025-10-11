@@ -36,13 +36,8 @@ return [
     ],
 
     'firebase' => [
-        'server_key' => env('FIREBASE_SERVER_KEY'),
-        'project_id' => env('FIREBASE_PROJECT_ID'),
-    ],
-
-    'fcm' => [
-        'server_key' => env('FIREBASE_SERVER_KEY'),
-        'project_id' => env('FIREBASE_PROJECT_ID'),
+        'project_id' => env('FIREBASE_PROJECT_ID', 'romanocc-15e21'),
+        'sender_id' => env('FIREBASE_SENDER_ID', '284985304833'),
     ],
 
 ];

@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Notification;
 use App\Models\UserFcmToken;
 use App\Models\User;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class NotificationService
@@ -204,6 +203,13 @@ class NotificationService
     private function sendPushNotification($userId, $title, $message, $data = [])
     {
         try {
+            $user = User::find($userId);
+            
+            if (!$user) {
+                Log::error("Usuario no encontrado", ['user_id' => $userId]);
+                return;
+            }
+
             $fcmTokens = UserFcmToken::getActiveTokens($userId);
             
             if (empty($fcmTokens)) {
@@ -211,55 +217,30 @@ class NotificationService
                 return;
             }
 
-            $serverKey = config('services.fcm.server_key');
+            // Usar FcmService para mejor configuración de sonido
+            $fcmService = app(FcmService::class);
             
-            if (!$serverKey) {
-                Log::error("FCM Server Key no configurada");
-                return;
-            }
-
             $notificationData = [
                 'title' => $title,
-                'body' => $message,
-                'sound' => 'default',
-                'badge' => 1,
-                'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
+                'message' => $message,
                 'data' => array_merge($data, [
                     'notification_type' => $data['action'] ?? 'general',
                     'timestamp' => now()->timestamp
                 ])
             ];
 
-            foreach ($fcmTokens as $token) {
-                $response = Http::withHeaders([
-                    'Authorization' => 'key=' . $serverKey,
-                    'Content-Type' => 'application/json',
-                ])->post('https://fcm.googleapis.com/fcm/send', [
-                    'to' => $token,
-                    'notification' => $notificationData,
-                    'data' => $notificationData['data'],
-                    'priority' => 'high',
-                    'android' => [
-                        'notification' => [
-                            'channel_id' => 'romanocc_channel',
-                            'priority' => 'high',
-                            'default_sound' => true,
-                            'default_vibrate_timings' => true,
-                        ]
-                    ]
-                ]);
+            $success = $fcmService->sendToUser($user, $notificationData);
 
-                if ($response->successful()) {
-                    Log::info("Notificación push enviada exitosamente", [
-                        'user_id' => $userId,
-                        'token' => substr($token, 0, 20) . '...'
-                    ]);
-                } else {
-                    Log::error("Error enviando notificación push", [
-                        'user_id' => $userId,
-                        'response' => $response->body()
-                    ]);
-                }
+            if ($success) {
+                Log::info("Notificación push enviada exitosamente via FcmService", [
+                    'user_id' => $userId,
+                    'title' => $title
+                ]);
+            } else {
+                Log::error("Error enviando notificación push via FcmService", [
+                    'user_id' => $userId,
+                    'title' => $title
+                ]);
             }
 
         } catch (\Exception $e) {

@@ -28,12 +28,10 @@ echo "✅ PHP version: $(php -v | head -n 1 | cut -d' ' -f2)"
 
 # Check if MySQL is running
 if ! /Applications/XAMPP/xamppfiles/bin/mysql -u root -p'N0m3l0s3#1' -e "SELECT 1;" >/dev/null 2>&1; then
-    echo "⚠️  Warning: MySQL not running. Starting MySQL..."
-    /Applications/XAMPP/xamppfiles/bin/mysql.server start >/dev/null 2>&1 || {
-        echo "❌ Error: Could not start MySQL. Please start it manually from XAMPP."
-        exit 1
-    }
-    echo "✅ MySQL started"
+    echo "❌ Error: MySQL is not running."
+    echo "💡 Please run: ./start-mysql.sh"
+    echo "   Or start MySQL manually from XAMPP Control Panel"
+    exit 1
 else
     echo "✅ MySQL is running"
 fi

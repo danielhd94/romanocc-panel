@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\User;
-use App\Models\Notification;
 use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification as FirebaseNotification;
@@ -16,21 +15,6 @@ class FcmService
     public function __construct()
     {
         $this->messaging = Firebase::messaging();
-    }
-
-    /**
-     * Test Firebase connection
-     */
-    public function testConnection(): bool
-    {
-        try {
-            // La conexión se establece al crear el objeto messaging
-            Log::info('Firebase connection successful');
-            return true;
-        } catch (\Exception $e) {
-            Log::error('Firebase connection failed', ['error' => $e->getMessage()]);
-            throw $e;
-        }
     }
 
     /**
@@ -49,28 +33,7 @@ class FcmService
     }
 
     /**
-     * Send notification to multiple users
-     */
-    public function sendToUsers(array $userIds, array $notificationData): bool
-    {
-        $users = User::whereIn('id', $userIds)->get();
-        $allTokens = [];
-
-        foreach ($users as $user) {
-            $tokens = $user->getActiveFcmTokens();
-            $allTokens = array_merge($allTokens, $tokens);
-        }
-
-        if (empty($allTokens)) {
-            Log::info('No active FCM tokens found for users: ' . implode(', ', $userIds));
-            return false;
-        }
-
-        return $this->sendToTokens($allTokens, $notificationData);
-    }
-
-    /**
-     * Send notification to specific FCM tokens
+     * Send notification to specific FCM tokens with simple configuration
      */
     public function sendToTokens(array $tokens, array $notificationData): bool
     {
@@ -84,6 +47,7 @@ class FcmService
 
             foreach ($tokens as $token) {
                 try {
+                    // Create a message with configuration to show as system notification even in foreground
                     $message = CloudMessage::withTarget('token', $token)
                         ->withNotification(FirebaseNotification::create(
                             $notificationData['title'] ?? 'ROMANOCC',
@@ -110,6 +74,10 @@ class FcmService
                                     'sound' => 'default',
                                     'badge' => 1,
                                     'content-available' => 1,
+                                    'alert' => [
+                                        'title' => $notificationData['title'] ?? 'ROMANOCC',
+                                        'body' => $notificationData['message'] ?? '',
+                                    ],
                                 ],
                             ],
                         ]);
@@ -141,96 +109,5 @@ class FcmService
             ]);
             return false;
         }
-    }
-
-    /**
-     * Create notification and send FCM
-     */
-    public function createAndSendNotification(
-        User $user,
-        string $type,
-        string $title,
-        string $message,
-        array $data = []
-    ): bool {
-        // Create notification in database
-        $notification = Notification::create([
-            'user_id' => $user->id,
-            'type' => $type,
-            'title' => $title,
-            'message' => $message,
-            'data' => $data,
-            'is_read' => false,
-            'fcm_sent' => false,
-        ]);
-
-        // Send FCM notification
-        $fcmSent = $this->sendToUser($user, [
-            'title' => $title,
-            'message' => $message,
-            'data' => array_merge($data, [
-                'notification_id' => $notification->id,
-                'type' => $type,
-            ])
-        ]);
-
-        // Update notification with FCM status
-        $notification->update(['fcm_sent' => $fcmSent]);
-
-        return $fcmSent;
-    }
-
-    /**
-     * Send comment notification
-     */
-    public function sendCommentNotification(
-        User $commenter,
-        User $articleOwner,
-        string $articleTitle,
-        string $commentText,
-        array $articleData = []
-    ): bool {
-        $title = 'Nuevo comentario';
-        $message = "{$commenter->name} comentó en: {$articleTitle}";
-        
-        $data = array_merge($articleData, [
-            'commenter_name' => $commenter->name,
-            'comment_text' => $commentText,
-        ]);
-
-        return $this->createAndSendNotification(
-            $articleOwner,
-            'comment',
-            $title,
-            $message,
-            $data
-        );
-    }
-
-    /**
-     * Send reply notification
-     */
-    public function sendReplyNotification(
-        User $replier,
-        User $commentOwner,
-        string $articleTitle,
-        string $replyText,
-        array $articleData = []
-    ): bool {
-        $title = 'Nueva respuesta';
-        $message = "{$replier->name} respondió a tu comentario en: {$articleTitle}";
-        
-        $data = array_merge($articleData, [
-            'replier_name' => $replier->name,
-            'reply_text' => $replyText,
-        ]);
-
-        return $this->createAndSendNotification(
-            $commentOwner,
-            'reply',
-            $title,
-            $message,
-            $data
-        );
     }
 }
