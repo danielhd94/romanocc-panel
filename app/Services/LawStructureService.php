@@ -74,11 +74,11 @@ class LawStructureService
     private function formatArticle($article, bool $isSearchMode = false): array
     {
         $articleData = [
+            'id' => $article->id,
             'number' => $article->article_number,
             'title' => $article->article_title,
         ];
         
-        // Solo incluir contenido si es modo búsqueda
         if ($isSearchMode) {
             $articleData['content'] = $article->article_content;
         }

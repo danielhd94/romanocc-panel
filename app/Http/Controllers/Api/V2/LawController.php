@@ -63,8 +63,10 @@ class LawController extends Controller
 
         // Transformar a la estructura esperada por la app móvil usando el servicio
         $allFormattedData = $laws->flatMap(function ($law) use ($isSearchMode) {
-            return $law->titles->map(function ($title) use ($isSearchMode) {
-                return $this->lawStructureService->formatTitleWithChapters($title, $isSearchMode);
+            return $law->titles->map(function ($title) use ($law, $isSearchMode) {
+                $formattedTitle = $this->lawStructureService->formatTitleWithChapters($title, $isSearchMode);
+                $formattedTitle['law_id'] = $law->id;
+                return $formattedTitle;
             });
         })->values();
 

@@ -33,3 +33,5 @@ Thumbs.db
 /app/Console/Commands/UpdateNumberingCommand.php
 /app/Console/Commands/CleanTitlesCommand.php
 /app/Console/Commands/UpdateArticlesCommand.php
+
+romanoc_backup.sql
