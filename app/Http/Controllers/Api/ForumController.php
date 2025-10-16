@@ -136,8 +136,8 @@ class ForumController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'title' => 'required|string|max:255',
-                'content' => 'required|string',
+                'title' => 'required|string|max:100',
+                'content' => 'required|string|max:65535',
             ]);
 
             if ($validator->fails()) {
@@ -203,8 +203,8 @@ class ForumController extends Controller
             }
 
             $validator = Validator::make($request->all(), [
-                'title' => 'required|string|max:255',
-                'content' => 'required|string',
+                'title' => 'required|string|max:100',
+                'content' => 'required|string|max:65535',
             ]);
 
             if ($validator->fails()) {
@@ -329,7 +329,7 @@ class ForumController extends Controller
             }
 
             $validator = Validator::make($request->all(), [
-                'content' => 'required|string',
+                'content' => 'required|string|max:65535',
             ]);
 
             if ($validator->fails()) {
