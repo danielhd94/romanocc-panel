@@ -48,4 +48,13 @@ class Article extends Model
     {
         return $this->hasMany(ArticleVideo::class, 'article_id', 'id');
     }
+
+    /**
+     * Relación con archivos del artículo
+     * Un artículo puede tener múltiples archivos
+     */
+    public function files()
+    {
+        return $this->hasMany(ArticleFile::class, 'article_id', 'id');
+    }
 }
