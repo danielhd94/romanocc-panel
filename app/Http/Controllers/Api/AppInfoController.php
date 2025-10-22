@@ -30,11 +30,11 @@ class AppInfoController extends Controller
             
             $data = [
                 'terms_and_conditions' => [
-                    'url' => $appInfo->url_terminos_y_condiciones ? $baseUrl . '/storage/' . $appInfo->url_terminos_y_condiciones : null,
+                    'url' => $appInfo->url_terminos_y_condiciones ? $baseUrl . '/' . $appInfo->url_terminos_y_condiciones : null,
                     'filename' => $appInfo->url_terminos_y_condiciones
                 ],
                 'privacy_policy' => [
-                    'url' => $appInfo->url_politica_de_privacidad ? $baseUrl . '/storage/' . $appInfo->url_politica_de_privacidad : null,
+                    'url' => $appInfo->url_politica_de_privacidad ? $baseUrl . '/' . $appInfo->url_politica_de_privacidad : null,
                     'filename' => $appInfo->url_politica_de_privacidad
                 ],
                 'app_version' => config('app.version', '1.0.0'),

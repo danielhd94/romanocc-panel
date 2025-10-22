@@ -78,11 +78,18 @@ class ArticleResolutionResource extends Resource
                     ->label('Enlace a la Resolución')
                     ->maxLength(255),
                 # archivo de la resolucion
-                Forms\Components\FileUpload::make('url')
+                Forms\Components\FileUpload::make('url_pdf')
                     ->label('Cargar Archivo de la Resolución (pdf, docx, doc)')
                     ->disk('public')
                     ->directory('resolutions')
-                    ->visibility('public'),
+                    ->visibility('public')
+                    ->afterStateUpdated(function ($state, callable $set) {
+                        if ($state) {
+                            // Extraer solo el nombre del archivo
+                            $filename = basename($state);
+                            $set('name', $filename);
+                        }
+                    }),
             ]);
     }
 
@@ -100,10 +107,16 @@ class ArticleResolutionResource extends Resource
                 Tables\Columns\TextColumn::make('name')
                     ->label('Nombre del Archivo')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('url')
+                Tables\Columns\TextColumn::make('url_pdf')
                     ->icon('heroicon-o-document-text')
-                    ->label('Archivo')
-                    ->url(fn (ArticleResolution $record) => Storage::url($record->url))
+                    ->label('Archivo PDF')
+                    ->url(fn (ArticleResolution $record) => $record->url_pdf ? config('app.url') . '/' . $record->url_pdf : null)
+                    ->openUrlInNewTab()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('url')
+                    ->icon('heroicon-o-link')
+                    ->label('Enlace')
+                    ->url(fn (ArticleResolution $record) => $record->url)
                     ->openUrlInNewTab()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('user.name')

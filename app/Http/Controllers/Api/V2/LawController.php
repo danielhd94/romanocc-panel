@@ -196,8 +196,8 @@ class LawController extends Controller
                             return [
                                 'id' => $resolution->id,
                                 'name' => $resolution->name,
-                                'url' => $resolution->url,
-                                'url_pdf' => $resolution->url_pdf,
+                                'url' => $resolution->url, // Enlace directo
+                                'url_pdf' => $resolution->url_pdf ? config('app.url') . '/' . $resolution->url_pdf : null,
                                 'user_name' => $resolution->user ? $resolution->user->name : 'Usuario',
                                 'created_at' => $resolution->created_at,
                                 'updated_at' => $resolution->updated_at,
