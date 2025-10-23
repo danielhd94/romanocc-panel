@@ -48,9 +48,25 @@ class SearchController extends Controller
             }
 
             $laws = $queryBuilder->with([
-                'titles.articles',
-                'titles.chapters.articles',
-                'titles.chapters.subchapters.articles',
+                'titles' => function ($q) {
+                    $q->with([
+                        'articles' => function ($qa) {
+                            $qa->orderByRaw('LPAD(article_number, 10, "0") ASC');
+                        },
+                        'chapters' => function ($qc) {
+                            $qc->with([
+                                'articles' => function ($qa) {
+                                    $qa->orderByRaw('LPAD(article_number, 10, "0") ASC');
+                                },
+                                'subchapters' => function ($qs) {
+                                    $qs->with(['articles' => function ($qsa) {
+                                        $qsa->orderByRaw('LPAD(article_number, 10, "0") ASC');
+                                    }])->orderByRaw('LPAD(subchapter_number, 10, "0") ASC');
+                                },
+                            ])->orderByRaw('LPAD(chapter_number, 10, "0") ASC');
+                        }
+                    ])->orderBy('title', 'asc');
+                },
             ])
             ->where(function ($q) use ($query) {
                 $q->whereHas('titles.articles', function ($subQ) use ($query) {
@@ -66,6 +82,7 @@ class SearchController extends Controller
                          ->orWhere('article_content', 'like', "%{$query}%");
                 });
             })
+            ->orderBy('id', 'asc')
             ->get()
             ->flatMap(function ($law) use ($type, $query) {
                 return $this->formatLawForSearch($law, $type, $query);

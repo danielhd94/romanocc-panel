@@ -38,21 +38,23 @@ class LawController extends Controller
             'titles' => function ($q) {
                 $q->with([
                     'articles' => function ($qa) { 
-                        $qa->orderBy('article_number', 'asc');
+                        $qa->orderByRaw('LPAD(article_number, 10, "0") ASC');
                     },
                     'chapters' => function ($qc) {
                         $qc->with([
                             'articles' => function ($qa) { 
-                                $qa->orderBy('article_number', 'asc');
+                                $qa->orderByRaw('LPAD(article_number, 10, "0") ASC');
                             },
-                            'subchapters.articles' => function ($qs) { 
-                                $qs->orderBy('article_number', 'asc');
+                            'subchapters' => function ($qs) {
+                                $qs->with(['articles' => function ($qsa) {
+                                    $qsa->orderByRaw('LPAD(article_number, 10, "0") ASC');
+                                }])->orderByRaw('LPAD(subchapter_number, 10, "0") ASC');
                             },
-                        ])->orderBy('id', 'asc');
+                        ])->orderByRaw('LPAD(chapter_number, 10, "0") ASC');
                     }
-                ])->orderBy('id', 'asc');
+                ])->orderBy('title', 'asc');
             },
-        ]);
+        ])->orderBy('id', 'asc');
         
         // Aplicar filtro por tipo si se especifica
         if ($type) {
@@ -66,6 +68,8 @@ class LawController extends Controller
             return $law->titles->map(function ($title) use ($law, $isSearchMode) {
                 $formattedTitle = $this->lawStructureService->formatTitleWithChapters($title, $isSearchMode);
                 $formattedTitle['law_id'] = $law->id;
+                $formattedTitle['law_type'] = $law->type; // Agregar tipo de ley/reglamento
+                $formattedTitle['law_name'] = $law->name; // Agregar nombre de la ley/reglamento
                 return $formattedTitle;
             });
         })->values();
@@ -99,21 +103,23 @@ class LawController extends Controller
             'titles' => function ($q) {
                 $q->with([
                     'articles' => function ($qa) { 
-                        $qa->orderBy('article_number', 'asc'); 
+                        $qa->orderByRaw('LPAD(article_number, 10, "0") ASC'); 
                     },
                     'chapters' => function ($qc) {
                         $qc->with([
                             'articles' => function ($qa) { 
-                                $qa->orderBy('article_number', 'asc'); 
+                                $qa->orderByRaw('LPAD(article_number, 10, "0") ASC'); 
                             },
-                            'subchapters.articles' => function ($qs) { 
-                                $qs->orderBy('article_number', 'asc'); 
+                            'subchapters' => function ($qs) {
+                                $qs->with(['articles' => function ($qsa) {
+                                    $qsa->orderByRaw('LPAD(article_number, 10, "0") ASC');
+                                }])->orderByRaw('LPAD(subchapter_number, 10, "0") ASC');
                             },
-                        ])->orderBy('id', 'asc');
+                        ])->orderByRaw('LPAD(chapter_number, 10, "0") ASC');
                     }
-                ])->orderBy('id', 'asc');
+                ])->orderBy('title', 'asc');
             },
-        ])->find($id);
+        ])->orderBy('id', 'asc')->find($id);
 
         if (!$law) {
             return response()->json([
@@ -123,7 +129,7 @@ class LawController extends Controller
         }
 
         // Transformar a la estructura esperada por la app móvil usando el servicio
-        $formattedData = $law->titles->map(function ($title) {
+        $formattedData = $law->titles->map(function ($title) use ($law) {
             if ($title->chapters->isNotEmpty()) {
                 $chapters = $title->chapters->map(function ($chapter) {
                     return $this->lawStructureService->formatChapterForShow($chapter);
@@ -135,6 +141,9 @@ class LawController extends Controller
             return [
                 'title' => (string) $title->title,
                 'chapters' => $chapters->values(),
+                'law_id' => $law->id,
+                'law_type' => $law->type,
+                'law_name' => $law->name,
             ];
         })->values();
 
@@ -157,7 +166,7 @@ class LawController extends Controller
             'titles.chapters.subchapters.articles.opinions',
             'titles.chapters.subchapters.articles.resolutions',
             'titles.chapters.subchapters.articles.videos'
-        ])->find($id);
+        ])->orderBy('id', 'asc')->find($id);
 
         if (!$law) {
             return response()->json([
@@ -268,6 +277,11 @@ class LawController extends Controller
                 }
             }
         }
+
+        // Ordenar los artículos por número de forma numérica
+        $articlesData = $articlesData->sortBy(function ($article) {
+            return (int) $article['number'];
+        })->values();
 
         return response()->json([
             'success' => true,

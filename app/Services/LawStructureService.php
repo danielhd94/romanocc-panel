@@ -39,7 +39,9 @@ class LawStructureService
         // Artículos directos del capítulo
         $articles = $chapter->articles->map(function ($article) use ($isSearchMode) {
             return $this->formatArticle($article, $isSearchMode);
-        });
+        })->sortBy(function ($article) {
+            return (int) $article['number'];
+        })->values();
 
         // Procesar subcapítulos
         $subchapters = $chapter->subchapters->map(function ($subchapter) use ($isSearchMode) {
@@ -60,7 +62,9 @@ class LawStructureService
     {
         $subchapterArticles = $subchapter->articles->map(function ($article) use ($isSearchMode) {
             return $this->formatArticle($article, $isSearchMode);
-        });
+        })->sortBy(function ($article) {
+            return (int) $article['number'];
+        })->values();
 
         return [
             'subchapter' => $subchapter->subchapter_title ?: "SUBCAPÍTULO " . $subchapter->subchapter_number,
@@ -97,7 +101,9 @@ class LawStructureService
 
         $articles = $title->articles->map(function ($article) use ($isSearchMode) {
             return $this->formatArticle($article, $isSearchMode);
-        })->sortBy('number')->values();
+        })->sortBy(function ($article) {
+            return (int) $article['number'];
+        })->values();
 
         return collect([[
             'chapter' => 'ARTÍCULOS',
@@ -132,8 +138,10 @@ class LawStructureService
             }
         }
 
-        // Ordenar por número
-        $articles = $articles->sortBy('number')->values();
+        // Ordenar por número de forma numérica
+        $articles = $articles->sortBy(function ($article) {
+            return (int) $article['number'];
+        })->values();
 
         return [
             'chapter' => $chapter->chapter_title ?: "CAPÍTULO " . $chapter->chapter_number,
@@ -156,7 +164,9 @@ class LawStructureService
                 'title' => $article->article_title,
                 'content' => $article->article_content,
             ];
-        })->sortBy('number')->values();
+        })->sortBy(function ($article) {
+            return (int) $article['number'];
+        })->values();
 
         return collect([[
             'chapter' => 'ARTÍCULOS',
@@ -208,7 +218,9 @@ class LawStructureService
                 if ($subchapterArticles->count() > 0) {
                     $formattedSubchapters[] = [
                         'subchapter' => $subchapter->subchapter_title ?: "SUBCAPÍTULO " . $subchapter->subchapter_number,
-                        'articles' => $subchapterArticles->sortBy('number')->values()->toArray(),
+                        'articles' => $subchapterArticles->sortBy(function ($article) {
+                            return (int) $article['number'];
+                        })->values()->toArray(),
                     ];
                 }
             }
@@ -217,7 +229,9 @@ class LawStructureService
             if ($chapterArticles->count() > 0 || count($formattedSubchapters) > 0) {
                 $formattedChapters[] = [
                     'chapter' => $chapter->chapter_title ?: "CAPÍTULO " . $chapter->chapter_number,
-                    'articles' => $chapterArticles->sortBy('number')->values()->toArray(),
+                        'articles' => $chapterArticles->sortBy(function ($article) {
+                            return (int) $article['number'];
+                        })->values()->toArray(),
                     'subchapters' => $formattedSubchapters,
                 ];
             }

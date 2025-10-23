@@ -32,25 +32,27 @@ class RegulationController extends Controller
                 'titles' => function ($q) {
                     $q->with([
                         'articles' => function ($qa) { 
-                            $qa->orderBy('article_number', 'asc');
+                            $qa->orderByRaw('LPAD(article_number, 10, "0") ASC');
                         },
                         'chapters' => function ($qc) {
                             $qc->with([
                                 'articles' => function ($qa) { 
-                                    $qa->orderBy('article_number', 'asc'); 
+                                    $qa->orderByRaw('LPAD(article_number, 10, "0") ASC'); 
                                 },
-                                'subchapters.articles' => function ($qs) { 
-                                    $qs->orderBy('article_number', 'asc'); 
+                                'subchapters' => function ($qs) {
+                                    $qs->with(['articles' => function ($qsa) {
+                                        $qsa->orderByRaw('LPAD(article_number, 10, "0") ASC');
+                                    }])->orderByRaw('LPAD(subchapter_number, 10, "0") ASC');
                                 },
-                            ])->orderBy('id', 'asc');
+                            ])->orderByRaw('LPAD(chapter_number, 10, "0") ASC');
                         }
-                    ])->orderBy('id', 'asc');
+                    ])->orderBy('title', 'asc');
                 },
-            ])->get();
+            ])->orderBy('id', 'asc')->get();
 
         // Transformar a la estructura esperada por la app móvil usando el servicio
         $allFormattedData = $regulations->flatMap(function ($regulation) {
-            return $regulation->titles->map(function ($title) {
+            return $regulation->titles->map(function ($title) use ($regulation) {
                 if ($title->chapters->isNotEmpty()) {
                     $chapters = $title->chapters->map(function ($chapter) {
                         return $this->lawStructureService->formatChapterForShow($chapter);
@@ -62,6 +64,9 @@ class RegulationController extends Controller
                 return [
                     'title' => (string) $title->title,
                     'chapters' => $chapters->values(),
+                    'law_id' => $regulation->id,
+                    'law_type' => $regulation->type,
+                    'law_name' => $regulation->name,
                 ];
             });
         })->values();
@@ -96,21 +101,23 @@ class RegulationController extends Controller
                 'titles' => function ($q) {
                     $q->with([
                         'articles' => function ($qa) { 
-                            $qa->orderBy('article_number', 'asc');
+                            $qa->orderByRaw('LPAD(article_number, 10, "0") ASC');
                         },
                         'chapters' => function ($qc) {
                             $qc->with([
                                 'articles' => function ($qa) { 
-                                    $qa->orderBy('article_number', 'asc'); 
+                                    $qa->orderByRaw('LPAD(article_number, 10, "0") ASC'); 
                                 },
-                                'subchapters.articles' => function ($qs) { 
-                                    $qs->orderBy('article_number', 'asc'); 
+                                'subchapters' => function ($qs) {
+                                    $qs->with(['articles' => function ($qsa) {
+                                        $qsa->orderByRaw('LPAD(article_number, 10, "0") ASC');
+                                    }])->orderByRaw('LPAD(subchapter_number, 10, "0") ASC');
                                 },
-                            ])->orderBy('id', 'asc');
+                            ])->orderByRaw('LPAD(chapter_number, 10, "0") ASC');
                         }
-                    ])->orderBy('id', 'asc');
+                    ])->orderBy('title', 'asc');
                 },
-            ])->find($id);
+            ])->orderBy('id', 'asc')->find($id);
 
         if (!$regulation) {
             return response()->json([
@@ -120,7 +127,7 @@ class RegulationController extends Controller
         }
 
         // Transformar a la estructura esperada por la app móvil usando el servicio
-        $formattedData = $regulation->titles->map(function ($title) {
+        $formattedData = $regulation->titles->map(function ($title) use ($regulation) {
             if ($title->chapters->isNotEmpty()) {
                 $chapters = $title->chapters->map(function ($chapter) {
                     return $this->lawStructureService->formatChapterForShow($chapter);
@@ -132,6 +139,9 @@ class RegulationController extends Controller
             return [
                 'title' => (string) $title->title,
                 'chapters' => $chapters->values(),
+                'law_id' => $regulation->id,
+                'law_type' => $regulation->type,
+                'law_name' => $regulation->name,
             ];
         })->values();
 
@@ -147,7 +157,7 @@ class RegulationController extends Controller
      */
     public function detail(Request $request, int $id): JsonResponse
     {
-        $regulation = Law::where('type', 'reglamento')->find($id);
+        $regulation = Law::where('type', 'reglamento')->orderBy('id', 'asc')->find($id);
 
         if (!$regulation) {
             return response()->json([
