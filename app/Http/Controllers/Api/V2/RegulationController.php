@@ -153,11 +153,20 @@ class RegulationController extends Controller
 
     /**
      * GET /api/v2/regulations/{id}/detail
-     * Retorna información plana del reglamento (para servicios)
+     * Retorna información plana del reglamento con opiniones, resoluciones, videos y archivos
      */
     public function detail(Request $request, int $id): JsonResponse
     {
-        $regulation = Law::where('type', 'reglamento')->orderBy('id', 'asc')->find($id);
+        $regulation = Law::where('type', 'reglamento')->with([
+            'titles.chapters.articles.opinions',
+            'titles.chapters.articles.resolutions',
+            'titles.chapters.articles.videos',
+            'titles.chapters.articles.files',
+            'titles.chapters.subchapters.articles.opinions',
+            'titles.chapters.subchapters.articles.resolutions',
+            'titles.chapters.subchapters.articles.videos',
+            'titles.chapters.subchapters.articles.files'
+        ])->orderBy('id', 'asc')->find($id);
 
         if (!$regulation) {
             return response()->json([
@@ -166,15 +175,142 @@ class RegulationController extends Controller
             ], 404);
         }
 
+        // Recopilar todos los artículos con sus datos relacionados
+        $articlesData = collect();
+
+        foreach ($regulation->titles as $title) {
+            foreach ($title->chapters as $chapter) {
+                // Artículos directos del capítulo
+                foreach ($chapter->articles as $article) {
+                    $articlesData->push([
+                        'id' => $article->id,
+                        'law_id' => $regulation->id,
+                        'law_name' => $regulation->name,
+                        'title' => $article->article_title,
+                        'content' => $article->article_content,
+                        'number' => $article->article_number,
+                        'chapter' => $chapter->chapter_title ?: 'CAPÍTULO ' . $chapter->chapter_number,
+                        'subchapter' => null,
+                        'opinions' => $article->opinions->map(function ($opinion) {
+                            return [
+                                'id' => $opinion->id,
+                                'opinion' => $opinion->opinion,
+                                'url_file' => $opinion->url_file,
+                                'user_name' => $opinion->user ? $opinion->user->name : 'Usuario',
+                                'created_at' => $opinion->created_at,
+                                'updated_at' => $opinion->updated_at,
+                            ];
+                        }),
+                        'resolutions' => $article->resolutions->map(function ($resolution) {
+                            return [
+                                'id' => $resolution->id,
+                                'name' => $resolution->name,
+                                'url' => $resolution->url,
+                                'url_pdf' => $resolution->url_pdf ? config('app.url') . '/' . $resolution->url_pdf : null,
+                                'user_name' => $resolution->user ? $resolution->user->name : 'Usuario',
+                                'created_at' => $resolution->created_at,
+                                'updated_at' => $resolution->updated_at,
+                            ];
+                        }),
+                        'videos' => $article->videos->map(function ($video) {
+                            return [
+                                'id' => $video->id,
+                                'name' => $video->name,
+                                'url' => $video->url,
+                                'user_name' => $video->user ? $video->user->name : 'Usuario',
+                                'created_at' => $video->created_at,
+                                'updated_at' => $video->updated_at,
+                            ];
+                        }),
+                        'files' => $article->files->map(function ($file) {
+                            return [
+                                'id' => $file->id,
+                                'file_path' => $file->file_path,
+                                'file_url' => $file->file_url,
+                                'file_name' => $file->file_name,
+                                'created_at' => $file->created_at,
+                                'updated_at' => $file->updated_at,
+                            ];
+                        }),
+                        'created_at' => $article->created_at,
+                        'updated_at' => $article->updated_at,
+                    ]);
+                }
+
+                // Artículos de subcapítulos
+                foreach ($chapter->subchapters as $subchapter) {
+                    foreach ($subchapter->articles as $article) {
+                        $articlesData->push([
+                            'id' => $article->id,
+                            'law_id' => $regulation->id,
+                            'law_name' => $regulation->name,
+                            'title' => $article->article_title,
+                            'content' => $article->article_content,
+                            'number' => $article->article_number,
+                            'chapter' => $chapter->chapter_title ?: 'CAPÍTULO ' . $chapter->chapter_number,
+                            'subchapter' => $subchapter->subchapter_title,
+                            'opinions' => $article->opinions->map(function ($opinion) {
+                                return [
+                                    'id' => $opinion->id,
+                                    'opinion' => $opinion->opinion,
+                                    'url_file' => $opinion->url_file,
+                                    'user_name' => $opinion->user ? $opinion->user->name : 'Usuario',
+                                    'created_at' => $opinion->created_at,
+                                    'updated_at' => $opinion->updated_at,
+                                ];
+                            }),
+                            'resolutions' => $article->resolutions->map(function ($resolution) {
+                                return [
+                                    'id' => $resolution->id,
+                                    'name' => $resolution->name,
+                                    'url' => $resolution->url,
+                                    'url_pdf' => $resolution->url_pdf,
+                                    'user_name' => $resolution->user ? $resolution->user->name : 'Usuario',
+                                    'created_at' => $resolution->created_at,
+                                    'updated_at' => $resolution->updated_at,
+                                ];
+                            }),
+                            'videos' => $article->videos->map(function ($video) {
+                                return [
+                                    'id' => $video->id,
+                                    'name' => $video->name,
+                                    'url' => $video->url,
+                                    'user_name' => $video->user ? $video->user->name : 'Usuario',
+                                    'created_at' => $video->created_at,
+                                    'updated_at' => $video->updated_at,
+                                ];
+                            }),
+                            'files' => $article->files->map(function ($file) {
+                                return [
+                                    'id' => $file->id,
+                                    'file_path' => $file->file_path,
+                                    'file_url' => $file->file_url,
+                                    'file_name' => $file->file_name,
+                                    'created_at' => $file->created_at,
+                                    'updated_at' => $file->updated_at,
+                                ];
+                            }),
+                            'created_at' => $article->created_at,
+                            'updated_at' => $article->updated_at,
+                        ]);
+                    }
+                }
+            }
+        }
+
+        // Ordenar los artículos por número de forma numérica
+        $articlesData = $articlesData->sortBy(function ($article) {
+            return (int) $article['number'];
+        })->values();
+
         return response()->json([
             'success' => true,
             'data' => [
                 'id' => $regulation->id,
                 'title' => $regulation->name,
                 'description' => 'Reglamento de la Ley General de Contrataciones Públicas',
-                'content' => 'Contenido completo del reglamento...',
                 'category' => 'reglamento',
-                'file_url' => null,
+                'articles' => $articlesData->values(),
                 'created_at' => $regulation->created_at,
                 'updated_at' => $regulation->updated_at,
             ]

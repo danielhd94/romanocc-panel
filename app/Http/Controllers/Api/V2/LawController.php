@@ -163,9 +163,11 @@ class LawController extends Controller
             'titles.chapters.articles.opinions',
             'titles.chapters.articles.resolutions',
             'titles.chapters.articles.videos',
+            'titles.chapters.articles.files',
             'titles.chapters.subchapters.articles.opinions',
             'titles.chapters.subchapters.articles.resolutions',
-            'titles.chapters.subchapters.articles.videos'
+            'titles.chapters.subchapters.articles.videos',
+            'titles.chapters.subchapters.articles.files'
         ])->orderBy('id', 'asc')->find($id);
 
         if (!$law) {
@@ -222,6 +224,16 @@ class LawController extends Controller
                                 'updated_at' => $video->updated_at,
                             ];
                         }),
+                        'files' => $article->files->map(function ($file) {
+                            return [
+                                'id' => $file->id,
+                                'file_path' => $file->file_path,
+                                'file_url' => $file->file_url,
+                                'file_name' => $file->file_name,
+                                'created_at' => $file->created_at,
+                                'updated_at' => $file->updated_at,
+                            ];
+                        }),
                         'created_at' => $article->created_at,
                         'updated_at' => $article->updated_at,
                     ]);
@@ -268,6 +280,16 @@ class LawController extends Controller
                                     'user_name' => $video->user ? $video->user->name : 'Usuario',
                                     'created_at' => $video->created_at,
                                     'updated_at' => $video->updated_at,
+                                ];
+                            }),
+                            'files' => $article->files->map(function ($file) {
+                                return [
+                                    'id' => $file->id,
+                                    'file_path' => $file->file_path,
+                                    'file_url' => $file->file_url,
+                                    'file_name' => $file->file_name,
+                                    'created_at' => $file->created_at,
+                                    'updated_at' => $file->updated_at,
                                 ];
                             }),
                             'created_at' => $article->created_at,
